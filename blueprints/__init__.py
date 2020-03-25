@@ -35,8 +35,10 @@ manager.add_command('db', MigrateCommand)
 
 # Import modules related to routing
 from blueprints.buku.resources import bp_buku
+from blueprints.kategori.resources import bp_kategori
 
 # Register routes
+app.register_blueprint(bp_kategori, url_prefix='/kategori')
 app.register_blueprint(bp_buku, url_prefix='/buku')
 
 # Create the database
