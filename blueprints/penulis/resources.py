@@ -49,7 +49,7 @@ class WriterResource(Resource):
 
         # Filter by name
         if args['nama'] != '' and args['nama'] != None:
-            writers = writers.filter_by(nama = args['nama'])
+            writers = writers.filter(Penulis.nama.like("%" + args['nama'] + "%"))
         
         # Show the result
         writers_list = []
@@ -57,6 +57,46 @@ class WriterResource(Resource):
             writer = marshal(writer, Penulis.response_fields)
             writer_list.append(writer)
         return writers_list, 200
+
+    '''
+    The following method is designed to add new writer
+
+    :param object self: A must present keyword argument
+    :return: Return failure or success message, and return all information about the new writer if success
+    '''
+    def post(self):
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('nama', location = 'json', required = True)
+        parser.add_argument('nomor_hp', location = 'json', required = True)
+        parser.add_argument('email', location = 'json', required = True)
+        args = parser.parse_args()
+
+        # Check emptyness
+        if (args['nama'] == '' or args['nama'] is None)
+        or (args['nomor_hp'] == '' or args['nomor_hp'] is None)
+        or (args['email'] == '' or args['email'] is None):
+            return {'pesan': 'Tidak boleh ada kolom yang dikosongkan'}, 400
+        
+        # ----- Check uniqueness -----
+        # By phone number
+        duplicate_phone = Penulis.query.filter_by(nomor_hp = args['nomor_hp']).first()
+        if duplicate_phone is not None:
+            return {'pesan': 'Nomor HP tersebut sudah digunakan oleh penulis lain'}, 409
+        
+        # By email
+        duplicate_email = Penulis.query.filter_by(email = args['email']).first()
+        if duplicate_email is not None:
+            return {'pesan': 'Email tersebut sudah digunakan oleh penulis lain'}, 409
+        
+        # Create new record in database
+        new_writer = Penulis(args['nama'], args['nomor_hp'], args['email'])
+        db.session.add(new_writer)
+        db.session.commit()
+
+        # Return success message with the added writer information
+        new_writer = marshal(new_writer, Penulis.response_fields)
+        return {'pesan': 'Sukses menambahkan penulis', 'penulis_baru': new_writer}, 200
 
 '''
 The following class will provide CRUD functionality for writer specified by writer ID.
