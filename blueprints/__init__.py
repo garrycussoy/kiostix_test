@@ -34,10 +34,10 @@ manager.add_command('db', MigrateCommand)
 # ---------- End of database setup ----------
 
 # Import modules related to routing
-# from blueprints.auth.__init__ import bp_auth
+from blueprints.buku.resources import bp_buku
 
 # Register routes
-# app.register_blueprint(bp_auth, url_prefix='/login-admin')
+app.register_blueprint(bp_buku, url_prefix='/buku')
 
 # Create the database
 db.create_all()
