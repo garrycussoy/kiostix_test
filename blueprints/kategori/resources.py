@@ -43,9 +43,11 @@ class CategoryResource(Resource):
         available_categories = Kategori.query
 
         # Format the array and return is as a result
+        formatted_category = []
         for category in available_categories:
             category = marshal(category, Kategori.response_fields)
-        return available_categories, 200
+            formatted_category.append(category)
+        return formatted_category, 200
     
     '''
     The following method is designed to add new category
@@ -64,7 +66,7 @@ class CategoryResource(Resource):
             return {'pesan': 'Kolom kategori tidak boleh dikosongkan'}, 400
         
         # Validate whether the category has already exist or not
-        available_categories = Kategori.query
+        available_categories = Kategori.query.filter_by(kategori = args['kategori'])
         if available_categories.first() is not None:
             return {'pesan': 'Kategori tersebut sudah ada'}, 409
         
@@ -74,6 +76,7 @@ class CategoryResource(Resource):
         db.session.commit()
 
         # Show the new category
+        new_category = marshal(new_category, Kategori.response_fields)
         return {'pesan': 'Sukses menambahkan kategori', 'kategori_baru': new_category}, 200
 
 '''
@@ -111,7 +114,7 @@ class CategoryResourceById(Resource):
     :param integer category_id:
     :return: Return editted category or a failure message if the proccess failed 
     '''
-    def post(self, category_id):
+    def put(self, category_id):
         # Search for that specific category
         category = Kategori.query.filter_by(id = category_id).first()
         if category is None:
