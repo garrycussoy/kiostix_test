@@ -17,9 +17,8 @@ class Buku(db.Model):
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     id_kategori = db.Column(db.Integer, db.ForeignKey('kategori.id'), nullable = False)
     judul = db.Column(db.String(255), nullable = False, default = '')
-    penulis = db.Column(db.String(255), nullable = False, default = '')
-    penerbit = db.Column(db.String(255), nulllable = False, default = '')
-    nomor_isbn = db.Column(db.String(255), nulllable = False, default = '')
+    penerbit = db.Column(db.String(255), nullable = False, default = '')
+    nomor_isbn = db.Column(db.String(255), nullable = False, default = '')
     created_at = db.Column(db.DateTime, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     updated_at = db.Column(db.DateTime, default = datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -28,7 +27,6 @@ class Buku(db.Model):
         'id': fields.Integer,
         'id_kategori': fields.Integer,
         'judul': fields.String,
-        'penulis': fields.String,
         'penerbit': fields.String,
         'nomor_isbn': fields.String,
         'created_at': fields.DateTime,
@@ -37,11 +35,10 @@ class Buku(db.Model):
 
     # Required fields when create new instances of "Buku" class
     def __init__(
-        self, id_kategori, judul, penulis, penerbit, nomor_isbn
+        self, id_kategori, judul, penerbit, nomor_isbn
     ):
         self.id_kategori = id_kategori
         self.judul = judul
-        self.penulis = penulis
         self.penerbit = penerbit
         self.nomor_isbn = nomor_isbn
 
