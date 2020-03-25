@@ -118,8 +118,13 @@ class WriterResourceById(Resource):
     :param integer writer_id:
     :return: Return all information of specified writer
     '''
-    def get(self):
-        pass
+    def get(self, writer_id):
+        # Search for related writer
+        writer = Penulis.query.filter_by(id = writer_id).first()
+        if writer is None:
+            return {'pesan': 'Penulis yang kamu cari tidak ditemukan'}, 404
+        writer = marshal(writer, Penulis.response_fields)
+        return writer, 200
 
 # Endpoint in "penulis" route
 api.add_resource(PenulisResource, '')
