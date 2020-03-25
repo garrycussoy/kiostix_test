@@ -32,5 +32,5 @@ class BookResource(Resource):
     def options(self):
         return {'status': 'ok'}, 200
 
-# Endpoint in problem-collection route
+# Endpoint in "buku" route
 api.add_resource(BookResource, '')
