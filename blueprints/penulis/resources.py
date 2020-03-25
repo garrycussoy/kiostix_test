@@ -125,6 +125,54 @@ class WriterResourceById(Resource):
             return {'pesan': 'Penulis yang kamu cari tidak ditemukan'}, 404
         writer = marshal(writer, Penulis.response_fields)
         return writer, 200
+    
+    '''
+    The following method is designed to edit information of a writer
+
+    :param object self: A must present keyword argument
+    :param integer writer_id:
+    :return: Return failure or success message, and return all information about the editted writer if success
+    '''
+    def put(self, writer_id):
+        # Get the writer
+        selected_writer = Penulis.query.filter_by(id = writer_id).first()
+        if selected_writer is None:
+            return {'pesan': 'Penulis yang ingin kamu ubah informasinya tidak ditemukan'}, 404
+
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('nama', location = 'json', required = True)
+        parser.add_argument('nomor_hp', location = 'json', required = True)
+        parser.add_argument('email', location = 'json', required = True)
+        args = parser.parse_args()
+
+        # Check emptyness
+        if (args['nama'] == '' or args['nama'] is None)
+        or (args['nomor_hp'] == '' or args['nomor_hp'] is None)
+        or (args['email'] == '' or args['email'] is None):
+            return {'pesan': 'Tidak boleh ada kolom yang dikosongkan'}, 400
+        
+        # ----- Check uniqueness -----
+        # By phone number
+        duplicate_phone = Penulis.query.filter_by(nomor_hp = args['nomor_hp']).first()
+        if duplicate_phone is not None:
+            return {'pesan': 'Nomor HP tersebut sudah digunakan oleh penulis lain'}, 409
+        
+        # By email
+        duplicate_email = Penulis.query.filter_by(email = args['email']).first()
+        if duplicate_email is not None:
+            return {'pesan': 'Email tersebut sudah digunakan oleh penulis lain'}, 409
+
+        # Edit related record in database
+        selected_writer.nama = args['nama']
+        selected_writer.nomor_hp = args['nomor_hp']
+        selected_writer.email = args['email']
+        selected_writer.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        db.session.commit()
+
+        # Return success message with the editted writer information
+        selected_writer = marshal(selected_writer, Penulis.response_fields)
+        return {'pesan': 'Sukses mengubah informasi penulis', 'penulis': selected_writer}, 200
 
 # Endpoint in "penulis" route
 api.add_resource(PenulisResource, '')

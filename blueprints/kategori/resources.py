@@ -129,6 +129,11 @@ class CategoryResourceById(Resource):
         if args['kategori'] == None or args['kategori'] == '':
             return {'pesan': 'Kolom kategori tidak boleh dikosongkan'}, 400
         
+        # Check uniqueness
+        duplicate_category = Kategori.query.filter_by(kategori = args['kategori']).first()
+        if duplicate_category is not None:
+            return {'pesan': 'Kategori tersebut sudah ada'}, 409
+        
         # Edit specific record in database
         category.kategori = args['kategori']
         category.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
