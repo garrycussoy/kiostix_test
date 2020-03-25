@@ -174,6 +174,30 @@ class WriterResourceById(Resource):
         selected_writer = marshal(selected_writer, Penulis.response_fields)
         return {'pesan': 'Sukses mengubah informasi penulis', 'penulis': selected_writer}, 200
 
+    '''
+    The following method is designed to delete a specified writer from the given writer ID.
+
+    :param object self: A must present keyword argument
+    :param integer writer_id:
+    :return: Return success or failure message, and also return the deleted information if success
+    '''
+    def delete(self, writer_id):
+        # Search for related writer
+        writer = Penulis.query.filter_by(id = writer_id).first()
+        if writer is None:
+            return {'pesan': 'Penulis yang kamu ingin hapus tidak ditemukan'}, 404
+        deleted_writer = marshal(writer, Penulis.response_fields)
+        
+        # Delete the writer
+        writer_books = PenulisBuku.query.filter_by(id_penulis = writer_id).first()
+        if writer_books is not None:
+            return {'pesan': 'Kamu tidak bisa menghapus informasi penulis ini karena informasi penulis ini masih digunakan di beberapa buku yang tersimpan di database'}, 400
+        db.session.delete(writer)
+        db.session.commit()
+
+        # Return the message and deleted information
+        return {'pesan': 'Sukses menghapus informasi penulis', 'penulis': deleted_writer}, 200
+
 # Endpoint in "penulis" route
 api.add_resource(PenulisResource, '')
 api.add_resource(PenulisResourceById, '/<writer_id>')
