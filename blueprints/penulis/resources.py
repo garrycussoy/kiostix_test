@@ -1,0 +1,86 @@
+# Import from standard libraries
+import json
+import math
+from datetime import datetime, timedelta, date
+
+# Import from related third party
+from blueprints import db, app
+from flask import Blueprint
+from flask_restful import Api, reqparse, Resource, marshal, inputs
+from sqlalchemy import desc
+
+# Import models
+from blueprints.buku.model import Buku
+from blueprints.penulis.model import Penulis
+from blueprints.kategori.model import Kategori
+from blueprints.penulis_buku.model import PenulisBuku
+
+# Creating blueprint
+bp_penulis = Blueprint('penulis', __name__)
+api = Api(bp_penulis)
+
+'''
+The following class is designed to get all writers and add new writer.
+'''
+class WriterResource(Resource):
+    '''
+    The following method is designed to prevent CORS.
+
+    :param object self: A must present keyword argument
+    :return: Status OK
+    '''
+    def options(self):
+        return {'status': 'ok'}, 200
+    
+    '''
+    The following method is designed to get all writers in database. Can also be searched by name
+
+    :param object self: A must present keyword argument
+    :return: Return all writers information which are stored in database
+    '''
+    def get(self):
+        # Take input from user
+        parser = reqparse.RequestParser()
+        parser.add_argument('nama', location = 'args', required = False)
+        args = parser.parse_args()
+
+        # Query all writers
+        writers = Penulis.query
+
+        # Filter by name
+        if args['nama'] != '' and args['nama'] != None:
+            writers = writers.filter_by(nama = args['nama'])
+        
+        # Show the result
+        writers_list = []
+        for writer in writers:
+            writer = marshal(writer, Penulis.response_fields)
+            writer_list.append(writer)
+        return writers_list, 200
+
+'''
+The following class will provide CRUD functionality for writer specified by writer ID.
+'''
+class WriterResourceById(Resource):
+    '''
+    The following method is designed to prevent CORS.
+
+    :param object self: A must present keyword argument
+    :return: Status OK
+    '''
+    def options(self, writer_id):
+        return {'status': 'ok'}, 200
+    
+    '''
+    The following method is designed to get writer information from the given writer ID.
+
+    :param object self: A must present keyword argument
+    :param integer writer_id:
+    :return: Return all information of specified writer
+    '''
+    def get(self):
+        pass
+
+# Endpoint in "penulis" route
+api.add_resource(PenulisResource, '')
+api.add_resource(PenulisResourceById, '/<writer_id>')
