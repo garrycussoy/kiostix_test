@@ -370,8 +370,62 @@ class BookResourceByWriter(Resource):
             filtered_books.append(book)
         return filtered_books, 200
 
+'''
+The following class is designed to get all books based on category.
+'''
+class BookResourceByCategory(Resource):
+    '''
+    The following method is designed to prevent CORS.
+
+    :param object self: A must present keyword argument
+    :return: Status OK
+    '''
+    def options(self):
+        return {'status': 'ok'}, 200
+    
+    '''
+    The following method is designed to get all books based on category.
+
+    :param object self: A must present keyword argument
+    :return: Return all books based on the category given
+    '''
+    def get(self):
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('kategori', location = 'args', required = False)
+        args = parser.parse_args()
+
+        # Filter the book
+        books = Buku.query
+        if args['kategori'] != '' and args['kategori'] is not None:
+            category = Kategori.query.filter_by(kategori = args['kategori']).first()
+            if category is None:
+                return [], 200
+            books = books.filter_by(id_kategori = category.id)
+
+        # Formatting the result and show it
+        filtered_books = []
+        for book in books:
+            book = marshal(book, Buku.response_fields)
+
+            # Search the writers of the book
+            writers = []
+            book_writer_id = PenulisBuku.query.filter_by(id_buku = book['id'])
+            for writer_id in book_writer_id:
+                writer = Penulis.query.filter_by(id = writer_id.id_penulis).first()
+                writer_name = writer.nama
+                writers.append(writer_name)
+            
+            # Formatting the writers
+            writers = ", ".join(writers)
+            book["penulis"] = writers
+
+            filtered_books.append(book)
+        return filtered_books, 200
+
 # Endpoint in "buku" route
 api.add_resource(BookResource, '')
 api.add_resource(BookResourceById, '/<book_id>')
 api.add_resource(BookResourceByTitle, '/sesuai-judul')
 api.add_resource(BookResourceByWriter, '/sesuai-penulis')
+api.add_resource(BookResourceByCategory, '/sesuai-kategori')
