@@ -158,6 +158,79 @@ class BookResourceById(Resource):
         book['penulis'] = writers
 
         return available_books, 200
+    
+    '''
+    The following method is designed to ediat a book.
+
+    :param object self: A must present keyword argument
+    :param integer book_id:
+    :return: Return failure or success message, and return all information about the editted book if success
+    '''
+    def post(self, book_id):
+        # Takke input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('id_kategori', location = 'json', required = True, type = int)
+        parser.add_argument('judul', location = 'json', required = True)
+        parser.add_argument('penerbit', location = 'json', required = True)
+        parser.add_argument('nomor_isbn', location = 'json', required = True)
+        parser.add_argument('id_penulis', location = 'json', required = True, type = list)
+        args = parser.parse_args()
+
+        # Check emptyness
+        if (
+            args['id_kategori'] == '' or args['id_kategori'] is None
+            or args['judul'] == '' or args['judul'] is None
+            or args['penerbit'] == '' or args['penerbit'] is None
+            or args['nomor_isbn'] == '' or args['nomor_isbn'] is None
+            or args['id_penulis'] == [] or args['id_penulis'] == '' or args['id_penulis'] is None
+        ):
+            return {'pesan': 'Tidak boleh ada kolom yang dikosongkan'}, 400
+        
+        # Check duplicate ISBN
+        duplicate_isbn = Buku.query.filter_by(nomor_isbn = args['isbn']).first()
+        if duplicate_isbn is not None:
+            return {'pesan': 'Buku dengan nomor ISBN tersebut sudah ada di database'}, 409
+        
+        # ----- Edit record in database -----
+        # Search for the book
+        related_book = Buku.query.filter_by(id = book_id).first()
+        if related_book is None:
+            return {'pesan': 'Buku yang ingin kamu edit tidak ditemukan'}, 404
+
+        # Check the existence of writer
+        writers = []
+        for writer_id in args['id_penulis']:
+            # Check whether the id exists or not
+            related_writer = Penulis.query.filter_by(id = writer_id).first()
+            if related_writer is None:
+                return {'pesan': 'Penulis dengan nomor ID ' + writer_id + ' tidak ada'}, 400
+            writers.append(related_writer.nama)
+        writers = ", ".join(writers)
+        
+        # Edit the record in "Buku" table
+        related_book.id_kategori = args['id_kategori']
+        related_book.judul = args['judul']
+        related_book.penerbit = args['penerbit']
+        related_book.nomor_isbn = args['nomor_isbn']
+        related_book.updated_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        db.session.commit()
+
+        # Remove the old record in "PenulisBuku" table
+        old_book_writers = PenulisBuku.query.filter_by(id_buku = book_id)
+        for old_book_writer in old_book_writers:
+            db.session.delete(old_book_writer)
+            db.session.commit()
+        
+        # Add new record in "PenulisBuku" table
+        for writer_id in args['id_penulis']:
+            new_record = PenulisBuku(book_id, writer_id)
+            db.session.add(new_record)
+            db.session.commit()
+
+        # Return the result
+        related_book = marshal(related_book, Buku.response_fields)
+        related_book['penulis'] = ", ".join(writers)
+        return {'pesan': 'Sukses mengubah informasi buku', 'buku': related_book}, 200
 
 # Endpoint in "buku" route
 api.add_resource(BookResource, '')
