@@ -21,7 +21,7 @@ class Penulis(db.Model):
     # The following dictionary is used to serialize "Penulis" instances into JSON form
     response_fields = {
         'id': fields.Integer,
-        'name': fields.String,
+        'nama': fields.String,
         'nomor_hp': fields.String,
         'email': fields.String,
         'created_at': fields.DateTime,

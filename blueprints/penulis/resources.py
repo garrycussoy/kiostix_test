@@ -55,7 +55,7 @@ class WriterResource(Resource):
         writers_list = []
         for writer in writers:
             writer = marshal(writer, Penulis.response_fields)
-            writer_list.append(writer)
+            writers_list.append(writer)
         return writers_list, 200
 
     '''
@@ -73,9 +73,9 @@ class WriterResource(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if (args['nama'] == '' or args['nama'] is None)
+        if ((args['nama'] == '' or args['nama'] is None)
         or (args['nomor_hp'] == '' or args['nomor_hp'] is None)
-        or (args['email'] == '' or args['email'] is None):
+        or (args['email'] == '' or args['email'] is None)):
             return {'pesan': 'Tidak boleh ada kolom yang dikosongkan'}, 400
         
         # ----- Check uniqueness -----
@@ -147,9 +147,9 @@ class WriterResourceById(Resource):
         args = parser.parse_args()
 
         # Check emptyness
-        if (args['nama'] == '' or args['nama'] is None)
+        if ((args['nama'] == '' or args['nama'] is None)
         or (args['nomor_hp'] == '' or args['nomor_hp'] is None)
-        or (args['email'] == '' or args['email'] is None):
+        or (args['email'] == '' or args['email'] is None)):
             return {'pesan': 'Tidak boleh ada kolom yang dikosongkan'}, 400
         
         # ----- Check uniqueness -----
@@ -199,5 +199,5 @@ class WriterResourceById(Resource):
         return {'pesan': 'Sukses menghapus informasi penulis', 'penulis': deleted_writer}, 200
 
 # Endpoint in "penulis" route
-api.add_resource(PenulisResource, '')
-api.add_resource(PenulisResourceById, '/<writer_id>')
+api.add_resource(WriterResource, '')
+api.add_resource(WriterResourceById, '/<writer_id>')
