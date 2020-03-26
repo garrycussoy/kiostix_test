@@ -20,7 +20,7 @@ bp_buku = Blueprint('buku', __name__)
 api = Api(bp_buku)
 
 '''
-The following class is designed to provide CRUD functionality of books.
+The following class is designed to create new book and get all available books.
 '''
 class BookResource(Resource):
     '''
@@ -31,6 +31,23 @@ class BookResource(Resource):
     '''
     def options(self):
         return {'status': 'ok'}, 200
+    
+    '''
+    The following method is designed to get all available books.
+
+    :param object self: A must present keyword argument
+    :return: Return all available books
+    '''
+    def get(self):
+        # Query all available books
+        books = Buku.query
+
+        # Formatting the result and show it
+        available_books = []
+        for book in books:
+            book = marshal(book, Buku.response_fields)
+            available_books.append(book)
+        return available_books, 200
 
 # Endpoint in "buku" route
 api.add_resource(BookResource, '')
