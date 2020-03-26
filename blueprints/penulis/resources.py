@@ -48,7 +48,7 @@ class WriterResource(Resource):
         writers = Penulis.query
 
         # Filter by name
-        if args['nama'] != '' and args['nama'] != None:
+        if args['nama'] != '' and args['nama'] is not None:
             writers = writers.filter(Penulis.nama.like("%" + args['nama'] + "%"))
         
         # Show the result
@@ -155,12 +155,12 @@ class WriterResourceById(Resource):
         # ----- Check uniqueness -----
         # By phone number
         duplicate_phone = Penulis.query.filter_by(nomor_hp = args['nomor_hp']).first()
-        if duplicate_phone is not None:
+        if duplicate_phone is not None and duplicate_phone.nomor_hp != selected_writer.nomor_hp:
             return {'pesan': 'Nomor HP tersebut sudah digunakan oleh penulis lain'}, 409
         
         # By email
         duplicate_email = Penulis.query.filter_by(email = args['email']).first()
-        if duplicate_email is not None:
+        if duplicate_email is not None and duplicate_phone.email != selected_writer.email:
             return {'pesan': 'Email tersebut sudah digunakan oleh penulis lain'}, 409
 
         # Edit related record in database

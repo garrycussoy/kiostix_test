@@ -89,7 +89,7 @@ class BookResource(Resource):
             return {'pesan': 'Tidak boleh ada kolom yang dikosongkan'}, 400
         
         # Check duplicate ISBN
-        duplicate_isbn = Buku.query.filter_by(nomor_isbn = args['isbn']).first()
+        duplicate_isbn = Buku.query.filter_by(nomor_isbn = args['nomor_isbn']).first()
         if duplicate_isbn is not None:
             return {'pesan': 'Buku dengan nomor ISBN tersebut sudah ada di database'}, 409
         
@@ -148,16 +148,16 @@ class BookResourceById(Resource):
             return {'pesan': 'Buku yang kamu cari tidak ditemukan'}, 404
         book = marshal(book, Buku.response_fields)
 
-        # Search for the writer of  the book
+        # Search for the writer of the book
         book_writers = PenulisBuku.query.filter_by(id_buku = book_id)
         writers = []
         for book_writer in book_writers:
-            writer = Penulis.query.filter_by(id = id_penulis).first()
+            writer = Penulis.query.filter_by(id = book_writer.id_penulis).first()
             writers.append(writer.nama)
         writers = ", ".join(writers)
         book['penulis'] = writers
 
-        return available_books, 200
+        return book, 200
     
     '''
     The following method is designed to edit a book.
@@ -187,13 +187,13 @@ class BookResourceById(Resource):
             return {'pesan': 'Tidak boleh ada kolom yang dikosongkan'}, 400
         
         # Check duplicate ISBN
-        duplicate_isbn = Buku.query.filter_by(nomor_isbn = args['isbn']).first()
-        if duplicate_isbn is not None:
+        related_book = Buku.query.filter_by(id = book_id).first()
+        duplicate_isbn = Buku.query.filter_by(nomor_isbn = args['nomor_isbn']).first()
+        if duplicate_isbn is not None and duplicate_isbn.nomor_isbn != related_book.nomor_isbn:
             return {'pesan': 'Buku dengan nomor ISBN tersebut sudah ada di database'}, 409
         
         # ----- Edit record in database -----
         # Search for the book
-        related_book = Buku.query.filter_by(id = book_id).first()
         if related_book is None:
             return {'pesan': 'Buku yang ingin kamu edit tidak ditemukan'}, 404
 
@@ -229,7 +229,7 @@ class BookResourceById(Resource):
 
         # Return the result
         related_book = marshal(related_book, Buku.response_fields)
-        related_book['penulis'] = ", ".join(writers)
+        related_book['penulis'] = writers
         return {'pesan': 'Sukses mengubah informasi buku', 'buku': related_book}, 200
     
     '''
@@ -284,7 +284,7 @@ class BookResourceByTitle(Resource):
     :return: Return all books based on the title given
     '''
     def get(self):
-        # Take input from users
+        # Take input from user
         parser = reqparse.RequestParser()
         parser.add_argument('judul', location = 'args', required = False)
         args = parser.parse_args()
@@ -334,7 +334,7 @@ class BookResourceByWriter(Resource):
     :return: Return all books based on the writer name given
     '''
     def get(self):
-        # Take input from users
+        # Take input from user
         parser = reqparse.RequestParser()
         parser.add_argument('penulis', location = 'args', required = False)
         args = parser.parse_args()
@@ -390,7 +390,7 @@ class BookResourceByCategory(Resource):
     :return: Return all books based on the category given
     '''
     def get(self):
-        # Take input from users
+        # Take input from user
         parser = reqparse.RequestParser()
         parser.add_argument('kategori', location = 'args', required = False)
         args = parser.parse_args()
@@ -420,6 +420,7 @@ class BookResourceByCategory(Resource):
             writers = ", ".join(writers)
             book["penulis"] = writers
 
+            book["kategori"] = args['kategori']
             filtered_books.append(book)
         return filtered_books, 200
 
