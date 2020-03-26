@@ -57,7 +57,7 @@ class BookResource(Resource):
             
             # Formatting the writers
             writers = ", ".join(writers)
-            book["writer"] = writers
+            book["penulis"] = writers
 
             available_books.append(book)
         return available_books, 200
@@ -160,14 +160,14 @@ class BookResourceById(Resource):
         return available_books, 200
     
     '''
-    The following method is designed to ediat a book.
+    The following method is designed to edit a book.
 
     :param object self: A must present keyword argument
     :param integer book_id:
     :return: Return failure or success message, and return all information about the editted book if success
     '''
-    def post(self, book_id):
-        # Takke input from users
+    def put(self, book_id):
+        # Take input from users
         parser = reqparse.RequestParser()
         parser.add_argument('id_kategori', location = 'json', required = True, type = int)
         parser.add_argument('judul', location = 'json', required = True)
@@ -231,7 +231,146 @@ class BookResourceById(Resource):
         related_book = marshal(related_book, Buku.response_fields)
         related_book['penulis'] = ", ".join(writers)
         return {'pesan': 'Sukses mengubah informasi buku', 'buku': related_book}, 200
+    
+    '''
+    The following method is designed to delete a book.
+
+    :param object self: A must present keyword argument
+    :param integer book_id:
+    :return: Return failure or success message, and return all information about the deleted book if success
+    '''
+    def delete(self, book_id):
+        # Query related book
+        book = Buku.query.filter_by(id = book_id).first()
+        if book is None:
+            return {'pesan': 'Buku yang kamu ingin hapus tidak ditemukan'}, 404
+        deleted_book = marshal(book, Buku.response_fields)
+
+        # Search for the writers of the book
+        writers = []
+        related_book_writers = PenulisBuku.query.filter_by(id_buku = book_id)
+        for related_book_writer in related_book_writers:
+            related_writer = Penulis.query.filter_by(id = related_book_writer.id_penulis).first()
+            writers.append(related_writer.nama)
+        writers = ", ".join(writers)
+        deleted_book["penulis"] = writers
+
+        # Delete all related records
+        for related_book_writer in related_book_writers:
+            db.session.delete(related_book_writer)
+            db.session.commit()
+        db.session.delete(book)
+        db.session.commit()
+
+        return {'pesan': 'Sukses menghapus buku', 'buku': deleted_book}, 200
+
+'''
+The following class is designed to get all books based on title.
+'''
+class BookResourceByTitle(Resource):
+    '''
+    The following method is designed to prevent CORS.
+
+    :param object self: A must present keyword argument
+    :return: Status OK
+    '''
+    def options(self):
+        return {'status': 'ok'}, 200
+    
+    '''
+    The following method is designed to get all books based on title.
+
+    :param object self: A must present keyword argument
+    :return: Return all books based on the title given
+    '''
+    def get(self):
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('judul', location = 'args', required = False)
+        args = parser.parse_args()
+
+        # Filter the book
+        books = Buku.query
+        if args['judul'] != '' and args['judul'] is not None:
+            books = books.filter(Buku.judul.like("%" + args['judul'] + "%"))
+
+        # Formatting the result and show it
+        filtered_books = []
+        for book in books:
+            book = marshal(book, Buku.response_fields)
+
+            # Search the writers of the book
+            writers = []
+            book_writer_id = PenulisBuku.query.filter_by(id_buku = book['id'])
+            for writer_id in book_writer_id:
+                writer = Penulis.query.filter_by(id = writer_id.id_penulis).first()
+                writer_name = writer.nama
+                writers.append(writer_name)
+            
+            # Formatting the writers
+            writers = ", ".join(writers)
+            book["penulis"] = writers
+
+            filtered_books.append(book)
+        return filtered_books, 200
+
+'''
+The following class is designed to get all books based on writer name.
+'''
+class BookResourceByWriter(Resource):
+    '''
+    The following method is designed to prevent CORS.
+
+    :param object self: A must present keyword argument
+    :return: Status OK
+    '''
+    def options(self):
+        return {'status': 'ok'}, 200
+    
+    '''
+    The following method is designed to get all books based on writer.
+
+    :param object self: A must present keyword argument
+    :return: Return all books based on the writer name given
+    '''
+    def get(self):
+        # Take input from users
+        parser = reqparse.RequestParser()
+        parser.add_argument('penulis', location = 'args', required = False)
+        args = parser.parse_args()
+
+        # Search related writer
+        books = []
+        if args['penulis'] != '' and args['penulis'] is not None:
+            writers = Penulis.query.filter(Penulis.nama.like("%" + args['penulis'] + "%"))
+            # Search related books
+            for writer in writers:
+                book_writers = PenulisBuku.query.filter_by(id_penulis = writer.id)
+                for book_writer in book_writers:
+                    related_book = Buku.query.filter_by(id = book_writer.id_buku).first()
+                    books.append(related_book)
+
+        # Formatting the result and show it
+        filtered_books = []
+        for book in books:
+            book = marshal(book, Buku.response_fields)
+
+            # Search the writers of the book
+            writers = []
+            book_writer_id = PenulisBuku.query.filter_by(id_buku = book['id'])
+            for writer_id in book_writer_id:
+                writer = Penulis.query.filter_by(id = writer_id.id_penulis).first()
+                writer_name = writer.nama
+                writers.append(writer_name)
+            
+            # Formatting the writers
+            writers = ", ".join(writers)
+            book["penulis"] = writers
+
+            filtered_books.append(book)
+        return filtered_books, 200
 
 # Endpoint in "buku" route
 api.add_resource(BookResource, '')
 api.add_resource(BookResourceById, '/<book_id>')
+api.add_resource(BookResourceByTitle, '/sesuai-judul')
