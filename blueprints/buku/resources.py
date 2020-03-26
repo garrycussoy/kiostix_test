@@ -374,3 +374,4 @@ class BookResourceByWriter(Resource):
 api.add_resource(BookResource, '')
 api.add_resource(BookResourceById, '/<book_id>')
 api.add_resource(BookResourceByTitle, '/sesuai-judul')
+api.add_resource(BookResourceByWriter, '/sesuai-penulis')
