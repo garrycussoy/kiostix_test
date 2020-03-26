@@ -119,6 +119,46 @@ class BookResource(Resource):
         # Return the result
         new_book['penulis'] = ", ".join(new_book['penulis'])
         return {'pesan': 'Sukses menambahkan buku', 'buku_baru': new_book}, 200
+    
+'''
+The following class is designed to provide CRUD functionality of books based on the given book ID.
+'''
+class BookResourceById(Resource):
+    '''
+    The following method is designed to prevent CORS.
+
+    :param object self: A must present keyword argument
+    :param integer book_id:
+    :return: Status OK
+    '''
+    def options(self, book_id):
+        return {'status': 'ok'}, 200
+    
+    '''
+    The following method is designed to get a book by ID.
+
+    :param object self: A must present keyword argument
+    :param integer book_id:
+    :return: Return all information of specified book
+    '''
+    def get(self, book_id):
+        # Query related book
+        book = Buku.query.filter_by(id = book_id).first()
+        if book is None:
+            return {'pesan': 'Buku yang kamu cari tidak ditemukan'}, 404
+        book = marshal(book, Buku.response_fields)
+
+        # Search for the writer of  the book
+        book_writers = PenulisBuku.query.filter_by(id_buku = book_id)
+        writers = []
+        for book_writer in book_writers:
+            writer = Penulis.query.filter_by(id = id_penulis).first()
+            writers.append(writer.nama)
+        writers = ", ".join(writers)
+        book['penulis'] = writers
+
+        return available_books, 200
 
 # Endpoint in "buku" route
 api.add_resource(BookResource, '')
+api.add_resource(BookResourceById, '/<book_id>')
